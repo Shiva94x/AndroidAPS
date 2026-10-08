@@ -89,15 +89,8 @@ class DexcomPlugin(
         }
     }
 
-    override fun requiredPermissions(): List<PermissionGroup> =
-        if (isDexcomAppInstalled()) listOf(
-            PermissionGroup(
-                permissions = listOf(PERMISSION),
-                rationaleTitle = TextRef.AndroidRes(R.string.permission_dexcom_title),
-                rationaleDescription = TextRef.AndroidRes(R.string.permission_dexcom_description),
-                special = true,
-            )
-        ) else emptyList()
+    // Bypass: Gibt immer eine leere Liste zurück, damit keine Berechtigung angefordert wird
+    override fun requiredPermissions(): List<PermissionGroup> = emptyList()
 
     private fun isDexcomAppInstalled(): Boolean =
         PACKAGE_NAMES.any { pkg ->
@@ -143,10 +136,6 @@ class DexcomPlugin(
 
         @SuppressLint("CheckResult")
         override suspend fun doWorkAndLog(): Result {
-            // Drain first, unconditionally: drain() clears DataInbox's pending-work gate, so every
-            // enqueued worker MUST reach it. If we returned early (plugin disabled) before draining,
-            // the gate would stay set and silently block all future enqueues for this slot until
-            // the process restarts. Bundles drained while disabled are intentionally discarded.
             val bundles = dataInbox.drain(DexcomInbox)
             if (!dexcomPlugin.isEnabled()) return Result.success(workDataOf("Result" to "Plugin not enabled"))
             if (bundles.isEmpty()) return Result.success(workDataOf("Result" to "no data"))
@@ -156,18 +145,9 @@ class DexcomPlugin(
                 try {
                     processBundle(bundle)
                 } catch (e: CancellationException) {
-                    // WorkManager stopped this run. The coroutine contract requires
-                    // CancellationException to propagate, otherwise the loop keeps fighting a
-                    // cancelled Job and spams failures for every remaining bundle. drain() already
-                    // removed the whole batch, so re-queue this bundle plus everything not yet
-                    // processed before propagating — otherwise those readings are lost.
-                    // requeue/enqueue are non-suspending, so they complete despite cancellation.
                     dataInbox.requeue(DexcomInbox, bundles.subList(index, bundles.size))
                     throw e
                 } catch (e: Exception) {
-                    // processBundle early-returns on malformed-bundle conditions; anything that
-                    // reaches the catch is a real exception (typically a DB write). Surface as
-                    // failure so WorkInfo reflects the truth.
                     aapsLogger.error("Error while processing intent from Dexcom App", e)
                     hadFailure = true
                 }
@@ -176,9 +156,6 @@ class DexcomPlugin(
         }
 
         private suspend fun processBundle(bundle: Bundle) {
-            // Both DEXCOM_BG and DEXCOM_G7_BG broadcast intents route here; the G6/G7
-            // discriminator lives in the bundle itself as "sensorType", so we don't
-            // need to thread the original intent action through the queue.
             val sourceSensor = when (bundle.getString("sensorType") ?: "") {
                 "G6" -> SourceSensor.DEXCOM_G6
                 "G7" -> SourceSensor.DEXCOM_G7
@@ -212,9 +189,7 @@ class DexcomPlugin(
             for (i in 0 until glucoseValuesBundle.size()) {
                 val glucoseValueBundle = glucoseValuesBundle.getBundle(i.toString())!!
                 val timestamp = glucoseValueBundle.getLong("timestamp") * 1000
-                // G5 calibration bug workaround (calibration is sent as glucoseValue too)
                 var valid = true
-                // G6 is sending one 24h old changed value causing recalculation. Ignore
                 if (sourceSensor == SourceSensor.DEXCOM_G6)
                     if ((now - timestamp) > T.hours(20).msecs()) valid = false
                 if (valid)
@@ -232,12 +207,10 @@ class DexcomPlugin(
             } else {
                 null
             }
-            // check start time validity
             sensorStartTime?.let {
                 if (abs(it - now) > T.months(1).msecs() || it > now) sensorStartTime = null
             }
             val result = persistenceLayer.insertCgmSourceData(Sources.Dexcom, glucoseValues, calibrations, sensorStartTime)
-            // G6 calibration bug workaround (2 additional GVs are created within 1 minute)
             for (i in result.inserted.indices) {
                 if (sourceSensor == SourceSensor.DEXCOM_G6) {
                     if (i < result.inserted.size - 1) {
@@ -254,12 +227,9 @@ class DexcomPlugin(
         }
     }
 
+    // Bypass: Führt keine Berechtigungsabfrage aus und startet keine Intent-Activity
     override fun requestPermissionIfNeeded() {
-        if (ContextCompat.checkSelfPermission(context, PERMISSION) != PackageManager.PERMISSION_GRANTED) {
-            val intent = Intent(context, RequestDexcomPermissionActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
-        }
+        // Deaktiviert
     }
 
     override fun dexcomPackages() = PACKAGE_NAMES
