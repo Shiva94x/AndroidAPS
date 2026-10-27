@@ -1,8 +1,8 @@
 package app.aaps.di.metro
 
 import android.content.Context
-import android.content.SharedPreferences
 import androidx.work.WorkManager
+import app.aaps.core.interfaces.alerts.EatReminder
 import app.aaps.core.interfaces.alerts.LocalAlertUtils
 import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.aps.AutosensData
@@ -11,7 +11,7 @@ import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.autotune.Autotune
 import app.aaps.core.interfaces.bgQualityCheck.BgQualityCheck
 import app.aaps.core.interfaces.bolus.BatchExecutor
-import app.aaps.core.interfaces.bolus.WizardBolusExecutor
+import app.aaps.core.interfaces.bolus.MasterActionExecutor
 import app.aaps.core.interfaces.bolus.WizardExecutor
 import app.aaps.core.interfaces.clientcontrol.ClientControlActionDispatcher
 import app.aaps.core.interfaces.configuration.Config
@@ -84,7 +84,7 @@ import app.aaps.core.interfaces.scenes.SceneChainResolver
 import app.aaps.core.interfaces.scenes.SceneIconResolver
 import app.aaps.core.interfaces.scenes.SceneStore
 import app.aaps.core.interfaces.scenes.Scenes
-import app.aaps.core.interfaces.sharedPreferences.SP
+import app.aaps.core.interfaces.sharedPreferences.KeyValueStore
 import app.aaps.core.interfaces.source.NSClientSource
 import app.aaps.core.interfaces.stats.DexcomTirCalculator
 import app.aaps.core.interfaces.stats.TddCalculator
@@ -124,7 +124,7 @@ import app.aaps.implementation.lifecycle.ProcessLifecycleListener
 import app.aaps.implementation.maintenance.cloud.CloudStorageManager
 import app.aaps.implementation.notifications.SnackbarNotificationFallback
 import app.aaps.implementation.plugin.PluginStore
-import app.aaps.implementation.profile.ProfileSwitchExpiryScheduler
+import app.aaps.implementation.profile.ProfileSwitchScheduler
 import app.aaps.implementation.profile.ProfileSwitchSilentGate
 import app.aaps.implementation.resources.ResourceHelperImpl
 import app.aaps.implementation.scenes.ActiveSceneManager
@@ -166,7 +166,6 @@ import app.aaps.plugins.sync.tidepool.compose.TidepoolRepository
 import app.aaps.plugins.sync.tidepool.utils.RateLimit
 import app.aaps.plugins.sync.wear.WearPlugin
 import app.aaps.plugins.sync.xdrip.compose.XdripMvvmRepository
-import app.aaps.ui.activityMonitor.ActivityMonitor
 import app.aaps.ui.search.BuiltInSearchables
 import app.aaps.workflow.WorkflowChainData
 import dev.zacsweers.metro.AppScope
@@ -312,7 +311,7 @@ interface AppRootGraph : MetroViewModelMultibindings {
     val cloudDirectoryManager: CloudDirectoryManager
     val graphConfigRepository: GraphConfigRepository
     val batchExecutor: BatchExecutor
-    val wizardBolusExecutor: WizardBolusExecutor
+    val masterActionExecutor: MasterActionExecutor
     val loggerUtils: LoggerUtils
     val importExportPrefs: ImportExportPrefs
     val preferences: Preferences
@@ -324,7 +323,7 @@ interface AppRootGraph : MetroViewModelMultibindings {
     val dateUtil: DateUtil
     val l: L
     val aapsSchedulers: AapsSchedulers
-    val sp: SP
+    val keyValueStore: KeyValueStore
     val widgetUpdater: WidgetUpdater
     val sceneIconResolver: SceneIconResolver
     val processedDeviceStatusData: ProcessedDeviceStatusData
@@ -347,17 +346,15 @@ interface AppRootGraph : MetroViewModelMultibindings {
     val nsClientRepository: NSClientRepository
     val builtInSearchables: BuiltInSearchables
 
-    /** Read by `MainApp`. */
-    val activityMonitor: ActivityMonitor
-
     /** The one application scope. */
     @ApplicationScope val appScope: CoroutineScope
     val notificationManager: NotificationManager
     val apsResult: APSResult
     val pumpEnactResult: PumpEnactResult
     val profileSwitchSilentGate: ProfileSwitchSilentGate
-    val profileSwitchExpiryScheduler: ProfileSwitchExpiryScheduler
+    val profileSwitchScheduler: ProfileSwitchScheduler
     val snackbarNotificationFallback: SnackbarNotificationFallback
+    val eatReminder: EatReminder
     val runningConfiguration: RunningConfiguration
     val runningConfigurationKeys: RunningConfigurationKeys
     val activePlugin: ActivePlugin
@@ -371,7 +368,6 @@ interface AppRootGraph : MetroViewModelMultibindings {
     val pumpStatusProvider: PumpStatusProvider
     val passwordCheck: PasswordCheck
     val overviewData: OverviewData
-    val sharedPreferences: SharedPreferences
     val exportPasswordDataStore: ExportPasswordDataStore
     val secureEncrypt: SecureEncrypt
     val cryptoUtil: CryptoUtil

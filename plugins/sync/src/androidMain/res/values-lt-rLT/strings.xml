@@ -15,7 +15,6 @@
     <string name="authorized_clients_add">Pridėti klientą</string>
     <string name="authorized_clients_comm_switch_title">Leisti valdyti iš kliento</string>
     <string name="authorized_clients_comm_switch_summary">Leisti susietiems klientams siųsti pasirašytas komandas per Nightscout. Išjunkite, jei norite sustabdyti ryšį jų nepašalindami.</string>
-    <string name="authorized_clients_needs_websocket">WebSocket ryšys išjungtas, todėl klientų komandų gauti negalima. Kol neįjungsite WebSocket ryšio, klientai matys, kad šis pagrindinis įrenginys nepriima komandų.</string>
     <string name="authorized_clients_state_active">Aktyvus</string>
     <string name="authorized_clients_state_pending">Laukiama</string>
     <string name="authorized_clients_last_seen">Paskutinį kartą matytas %1$s</string>
@@ -56,6 +55,7 @@
     <string name="pair_with_master_already_paired_master">Šiuo metu susieta su pagrindiniu įrenginiu %1$s. Norėdami įvesti naują PIN, pirmiausia atsiekite.</string>
     <string name="pair_with_master_unpair">Atsieti</string>
     <string name="pair_with_master_sending">Siunčiamas susiejimo pranešimas…</string>
+    <!-- Client set-up from the master's QR code -->
     <!-- Client-control orphan notification (master no longer recognises this client) -->
     <string name="clientcontrol_orphan_notification">Pagrindinis AAPS įrenginys šio įrenginio nebeatpažįsta. Atverkite Valdymas → Susieti su pagrindiniu įrenginiu ir susiekite iš naujo.</string>
     <string name="ns_client">NSClient</string>
@@ -123,7 +123,7 @@
     <string name="wear_infos_watchface">Ekrano info</string>
     <string name="wear_export_watchface">Eksportuoti šabloną</string>
     <string name="wear_new_custom_watchface_exported">Pasirinktinio ekrano šablonas eksportuotas</string>
-    <string name="wear_link_to_more_cwf_doc">https://androidaps.readthedocs.io/en/latest/ExchangeSiteCustomWatchfaces/index.html</string>
+    <string name="wear_link_to_more_cwf_doc">https://androidaps.readthedocs.io/lt/latest/ExchangeSiteCustomWatchfaces/index.html</string>
     <string name="resend_all_data">Pakartotinai siųsti visus duomenis</string>
     <string name="open_settings_on_wear">Atidaryti išmaniojo laikrodžio nustatymus</string>
     <string name="wear_import_custom_watchface_title">Pasirinkti pasirinktinį ciferblatą</string>
@@ -154,7 +154,7 @@
     <string name="aps">APS</string>
     <string name="last_run">Paskutinis veiksmas</string>
     <string name="last_enact">Paskutinis veiksmas</string>
-    <string name="tdd_line">%1$.2fv %1$.0f%%</string>
+    <string name="tdd_line" comment="%1$.2f=total daily dose in units, %2$.0f=that dose as percent of the reference dose. Example: 32.50U 108%">%1$.2fv %2$.0f%%</string>
     <string name="today">Šiandien</string>
     <string name="weighted">svertinis</string>
     <string name="full_xdrip_sync_comment">Vykdyti pilną sinchronizaciją? Tai gali užtrukti nemažai laiko ir kol ji nebus užbaigta, nematysite atnaujintų xDrip+.</string>
@@ -255,6 +255,8 @@
     <string name="sms_read_status_failed">Statuso nuskaityti nepavyko</string>
     <string name="sms_profile_switch_created">Profilio keitimas sukurtas</string>
     <string name="sms_wrong_tbr_duration">Laikinos bazės trukmė turi būti %1$d min kartotinė ir didesnė nei 0.</string>
+    <string name="sms_tbr_percent_only">Ši pompa laikiną bazę nustato procentais, o ne V/val.</string>
+    <string name="sms_tbr_absolute_only">Ši pompa laikiną bazę nustato V/val., o ne procentais.</string>
     <string name="a11y_otp_qr_code">QR kodas vienkartinio slaptažodžio nustatymui</string>
     <string name="permission_sms_title">SMS</string>
     <string name="permission_sms_description">Programai reikia SMS leidimo nuotoliniam valdymui tekstinėmis žinutėmis</string>

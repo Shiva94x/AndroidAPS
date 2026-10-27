@@ -1,7 +1,7 @@
 package app.aaps.di.metro
 
 import android.content.Context
-import android.content.SharedPreferences
+import app.aaps.core.interfaces.alerts.EatReminder
 import app.aaps.core.interfaces.alerts.LocalAlertUtils
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.automation.Automation
@@ -34,10 +34,11 @@ import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.scenes.Scenes
-import app.aaps.core.interfaces.sharedPreferences.SP
+import app.aaps.core.interfaces.sharedPreferences.KeyValueStore
 import app.aaps.core.interfaces.source.DexcomBoyda
 import app.aaps.core.interfaces.source.XDripSource
 import app.aaps.core.interfaces.storage.Storage
+import app.aaps.core.interfaces.ui.IconsProvider
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
@@ -57,7 +58,7 @@ import app.aaps.di.mergePlugins
 import app.aaps.implementation.lifecycle.ProcessLifecycleListener
 import app.aaps.implementation.notifications.SnackbarNotificationFallback
 import app.aaps.implementation.plugin.PluginStore
-import app.aaps.implementation.profile.ProfileSwitchExpiryScheduler
+import app.aaps.implementation.profile.ProfileSwitchScheduler
 import app.aaps.implementation.resources.ResourceHelperImpl
 import app.aaps.implementation.utils.fabric.FabricPrivacyImpl
 import app.aaps.plugins.aps.loop.runningMode.RunningModeExpiryScheduler
@@ -71,7 +72,6 @@ import app.aaps.plugins.constraints.signatureVerifier.SignatureVerifierPlugin
 import app.aaps.plugins.source.di.SourceMetroGraph
 import app.aaps.plugins.sync.di.OpenHumansMetroBridge
 import app.aaps.plugins.sync.nsclientV3.NsIncomingDataProcessor
-import app.aaps.ui.activityMonitor.ActivityMonitor
 import dev.zacsweers.metro.MembersInjector
 import dev.zacsweers.metro.createGraphFactory
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
@@ -271,22 +271,22 @@ class MetroGraphs(
     val rxBus: RxBus get() = root.rxBus
     val dateUtil: DateUtil get() = root.dateUtil
     val l: L get() = root.l
-    val sp: SP get() = root.sp
+    val keyValueStore: KeyValueStore get() = root.keyValueStore
+    val iconsProvider: IconsProvider get() = root.iconsProvider
     val widgetUpdater: WidgetUpdater get() = root.widgetUpdater
     val commandQueue: CommandQueue get() = root.commandQueue
     val localAlertUtils: LocalAlertUtils get() = root.localAlertUtils
     val persistenceLayer: PersistenceLayer get() = root.persistenceLayer
     val appRepository: AppRepository get() = root.appRepository
     val constraintsChecker: ConstraintsChecker get() = root.constraintsChecker
-    val activityMonitor: ActivityMonitor get() = root.activityMonitor
     val notificationManager: NotificationManager get() = root.notificationManager
-    val profileSwitchExpiryScheduler: ProfileSwitchExpiryScheduler get() = root.profileSwitchExpiryScheduler
+    val profileSwitchScheduler: ProfileSwitchScheduler get() = root.profileSwitchScheduler
     val snackbarNotificationFallback: SnackbarNotificationFallback get() = root.snackbarNotificationFallback
+    val eatReminder: EatReminder get() = root.eatReminder
     val activePlugin: ActivePlugin get() = root.activePlugin
     val pluginStore: PluginStore get() = root.pluginStore
     val maintenance: Maintenance get() = root.maintenance
     val fileListProvider: FileListProvider get() = root.fileListProvider
-    val sharedPreferences: SharedPreferences get() = root.sharedPreferences
     val exportPasswordDataStore: ExportPasswordDataStore get() = root.exportPasswordDataStore
     val cryptoUtil: CryptoUtil get() = root.cryptoUtil
     val concentrationHelper: ConcentrationHelper get() = root.concentrationHelper

@@ -87,6 +87,7 @@
     <string name="wrong_pump_data">Data kommer från en annan pump. Byt pumpdrivrutin för att återställa.</string>
     <string name="bg_label">BG</string>
     <string name="calibration">Kalibrering</string>
+    <!-- Calibration entry rejection reasons. Built by the master, also for a calibration sent by a client. -->
     <string name="duration_label">Duration</string>
     <string name="shortgramm">g</string>
     <string name="notconfigured">Inte konfigurerad</string>
@@ -353,7 +354,6 @@
     <string name="max_carbs_title">Maximalt tillåtna kolhydrater [g]</string>
     <string name="patient_type">Patienttyp</string>
     <!--    Protection-->
-    <string name="unlock_settings">Lås upp inställningar</string>
     <!--    Pumps -->
     <string name="battery_label">Batterinivå</string>
     <string name="reservoir_label">Reservoar</string>

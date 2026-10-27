@@ -88,6 +88,7 @@
     <string name="wrong_pump_data">Daten kommen von einer anderen Pumpe. Wechsle den Pumpentreiber.</string>
     <string name="bg_label">BZ</string>
     <string name="calibration">Kalibrierung</string>
+    <!-- Calibration entry rejection reasons. Built by the master, also for a calibration sent by a client. -->
     <string name="duration_label">Dauer</string>
     <string name="shortgramm">g</string>
     <string name="notconfigured">Nicht konfiguriert</string>
@@ -363,7 +364,6 @@
     <string name="max_carbs_title">Max erlaubte KH [g]</string>
     <string name="patient_type">Patiententyp</string>
     <!--    Protection-->
-    <string name="unlock_settings">Einstellungen freischalten</string>
     <!--    Pumps -->
     <string name="battery_label">Batterie</string>
     <string name="reservoir_label">Reservoir</string>

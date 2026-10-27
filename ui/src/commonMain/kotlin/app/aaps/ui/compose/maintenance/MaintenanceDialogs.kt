@@ -56,6 +56,7 @@ fun MaintenanceDialogs(
     val cloudDirectoryState by maintenanceViewModel.cloudDirectoryState.collectAsStateWithLifecycle()
     val exportConfig by maintenanceViewModel.exportConfig.collectAsStateWithLifecycle()
     val isDirectoryAccessGranted by maintenanceViewModel.isDirectoryAccessGranted.collectAsStateWithLifecycle()
+    val directoryPath by maintenanceViewModel.directoryPath.collectAsStateWithLifecycle()
 
     // Collect maintenance events
     LaunchedEffect(Unit) {
@@ -99,6 +100,7 @@ fun MaintenanceDialogs(
             onResetDbClick = { showConfirmResetDb = true },
             exportConfig = exportConfig,
             isDirectoryAccessGranted = isDirectoryAccessGranted,
+            directoryPath = directoryPath,
             onToggleSettingsLocal = { maintenanceViewModel.toggleSettingsLocal(it) },
             onToggleSettingsCloud = { maintenanceViewModel.toggleSettingsCloud(it) },
             onToggleLogEmail = { maintenanceViewModel.toggleLogEmail(it) },
@@ -168,7 +170,7 @@ fun MaintenanceDialogs(
     if (showConfirmSendLogs) {
         OkCancelDialog(
             title = stringResource(CoreUiStrings.confirmation),
-            message = stringResource(CoreUiStrings.send_logs) + "?",
+            message = stringResource(CoreUiStrings.value_question, stringResource(CoreUiStrings.send_logs)),
             onConfirm = {
                 showConfirmSendLogs = false
                 maintenanceViewModel.sendLogs()
@@ -180,7 +182,7 @@ fun MaintenanceDialogs(
     if (showConfirmExportCsv) {
         OkCancelDialog(
             title = stringResource(CoreUiStrings.confirmation),
-            message = stringResource(CoreUiStrings.ue_export_to_csv) + "?",
+            message = stringResource(CoreUiStrings.value_question, stringResource(CoreUiStrings.ue_export_to_csv)),
             onConfirm = {
                 showConfirmExportCsv = false
                 maintenanceViewModel.exportCsv()
@@ -203,7 +205,7 @@ fun MaintenanceDialogs(
             val confirmState = exportState as ExportState.ConfirmExport
             OkCancelDialog(
                 title = stringResource(CoreUiStrings.export_to),
-                message = confirmState.fileName + "?\n\n" +
+                message = stringResource(CoreUiStrings.value_question, confirmState.fileName) + "\n\n" +
                     stringResource(CoreUiStrings.password_preferences_encrypt_prompt),
                 onConfirm = { maintenanceViewModel.onExportConfirmed() },
                 onDismiss = { maintenanceViewModel.cancelExport() }

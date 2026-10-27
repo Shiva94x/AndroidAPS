@@ -126,7 +126,7 @@
     <string name="pref_title_ns_use_ws">Usar WebSockets</string>
     <string name="pref_summary_ns_use_ws">Usar WebSockets para comunicación en tiempo real con Nightscout</string>
     <string name="pref_title_ns_allow_client_control">Permitir control del cliente</string>
-    <string name="pref_summary_ns_allow_client_control">Permitir que los dispositivos cliente emparejados envíen comandos firmados (por ejemplo, iniciar/detener escenas) a través de Nightscout</string>
+    <string name="pref_summary_ns_allow_client_control">Permitir que los dispositivos cliente emparejados envíen comandos firmados (p. ej., iniciar/detener escenas) a través de Nightscout. Esto también activa el modo reforzado: los cambios realizados directamente en Nightscout ya no se aplicarán</string>
     <!-- OpenHumans preferences -->
     <string name="pref_title_openhumans_wifi_only">Sólo WiFi</string>
     <string name="pref_title_openhumans_charging_only">Sólo durante la carga</string>
@@ -267,8 +267,8 @@
     <string name="lang_tr">Turco</string>
     <string name="lang_zh_tw">Chino tradicional</string>
     <string name="lang_zh_cn">Chino simplificado</string>
-    <string name="pref_title_patient_name">Nombre</string>
-    <string name="pref_summary_patient_name">Nombre para identificar esta instancia de AAPS (se muestra en informes y sincronización)</string>
+    <string name="pref_title_patient_name">Nombre de la instancia</string>
+    <string name="pref_summary_patient_name">Nombre de la persona que usa este teléfono. Identifica esta instancia de AAPS en los informes y en la sincronización</string>
     <!-- StringKey: Directory preferences -->
     <string name="pref_title_aaps_directory">Directorio de AAPS</string>
     <!-- StringKey: Protection preferences -->

@@ -9,6 +9,7 @@ import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.profile.ProfileRepository
+import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.TextResolver
 import app.aaps.core.interfaces.scenes.SceneStore
 import app.aaps.core.interfaces.tempTargets.toTTPresets
@@ -16,6 +17,7 @@ import app.aaps.core.keys.StringNonKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.wizard.QuickWizard
 import app.aaps.core.objects.wizard.QuickWizardMode
+import app.aaps.core.ui.CoreUiStrings
 import app.aaps.core.ui.compose.formatMinutesAsDuration
 import app.aaps.core.ui.compose.icons.IcBolus
 import app.aaps.core.ui.compose.icons.IcCarbs
@@ -47,6 +49,7 @@ class QuickLaunchResolver(
     private val automation: Automation,
     private val activePlugin: ActivePlugin,
     private val profileRepository: ProfileRepository,
+    private val profileUtil: ProfileUtil,
     private val sceneRepository: SceneStore,
     private val rh: TextResolver,
     private val elementAvailability: ElementAvailability
@@ -123,6 +126,17 @@ class QuickLaunchResolver(
         else                                   -> action.elementType?.let { elementAvailability.isAvailable(it) } ?: true
     }
 
+    /**
+     * Whether a valid action is shown on the toolbar right now. A QuickWizard entry follows the same
+     * rule as its overview button ([app.aaps.core.objects.wizard.QuickWizardEntry.isActive]): its time
+     * window, the phone as device, and the cool-down after use. This changes during the day, so the
+     * entry is only hidden here, never removed from the saved toolbar like an [isValid] failure.
+     */
+    fun isShownNow(action: QuickLaunchAction): Boolean = when (action) {
+        is QuickLaunchAction.QuickWizardAction -> quickWizard.get(action.guid)?.isActive() == true
+        else                                   -> true
+    }
+
     fun resolveLabel(action: QuickLaunchAction): String = when (action) {
         is QuickLaunchAction.QuickWizardAction -> quickWizard.get(action.guid)?.buttonText() ?: "?"
         is QuickLaunchAction.AutomationAction  -> automation.findEventById(action.automationId)?.title ?: "?"
@@ -153,12 +167,12 @@ class QuickLaunchResolver(
 
                 QuickWizardMode.CARBS   -> {
                     val carbs = entry.carbs()
-                    if (carbs > 0) "${carbs}g" else null
+                    if (carbs > 0) rh.gs(InterfacesStrings.format_carbs, carbs) else null
                 }
 
                 QuickWizardMode.WIZARD  -> {
                     val carbs = entry.carbs()
-                    if (carbs > 0) "${carbs}g" else null
+                    if (carbs > 0) rh.gs(InterfacesStrings.format_carbs, carbs) else null
                 }
             }
         }
@@ -166,12 +180,18 @@ class QuickLaunchResolver(
         is QuickLaunchAction.AutomationAction  -> automation.findEventById(action.automationId)
             ?.actionsDescription()?.joinToString(", ")
 
+        // Target and duration: the name alone ("Eating soon") does not say what the button will set,
+        // and the user only learned the target from the confirmation after pressing it.
         is QuickLaunchAction.TempTargetPreset  -> {
             val presets = preferences.get(StringNonKey.TempTargetPresets).toTTPresets()
             val preset = presets.find { it.id == action.presetId }
             preset?.let {
                 val durationMin = (it.duration / 60000L).toInt()
-                formatMinutesAsDuration(durationMin, rh)
+                rh.gs(
+                    CoreUiStrings.quicklaunch_tt_description,
+                    profileUtil.fromMgdlToStringWithUnits(it.targetValue),
+                    formatMinutesAsDuration(durationMin, rh)
+                )
             }
         }
 
@@ -206,21 +226,12 @@ class QuickLaunchResolver(
     private fun findPlugin(className: String): PluginBase? =
         activePlugin.getPluginsList().find { it::class.simpleName.orEmpty() == className }
 
-    companion object {
-
-        fun buildProfileLabel(action: QuickLaunchAction.ProfileAction): String = buildString {
-            append(action.profileName)
-            if (action.percentage != 100) append(" ${action.percentage}%")
-            if (action.durationMinutes > 0) {
-                val hours = action.durationMinutes / 60
-                val mins = action.durationMinutes % 60
-                append(" ")
-                when {
-                    hours > 0 && mins > 0 -> append("${hours}h${mins}m")
-                    hours > 0             -> append("${hours}h")
-                    else                  -> append("${mins}m")
-                }
-            }
-        }
+    private fun buildProfileLabel(action: QuickLaunchAction.ProfileAction): String {
+        val percentage = if (action.percentage != 100) rh.gs(CoreUiStrings.units_format_percent, action.percentage) else null
+        val duration = if (action.durationMinutes > 0) formatMinutesAsDuration(action.durationMinutes, rh) else null
+        val details =
+            if (percentage != null && duration != null) rh.gs(CoreUiStrings.value_with_unit, percentage, duration)
+            else percentage ?: duration
+        return details?.let { rh.gs(CoreUiStrings.value_with_unit, action.profileName, it) } ?: action.profileName
     }
 }
