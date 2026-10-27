@@ -1,16 +1,24 @@
 package app.aaps.pump.omnipod.common.bledriver.pod.definition
 
-import java.util.*
+import com.google.gson.annotations.SerializedName
+import java.util.Calendar
+import java.util.Collections
 
 class BasalProgram(
     segments: List<Segment>
 ) {
 
-    val segments: MutableList<Segment> = segments.toMutableList()
-        get() = Collections.unmodifiableList(field)
+    // Keeps the JSON key "segments" so saved Pod state keeps deserializing across this field's rename.
+    // Alternate can be removed once all users have upgraded from the O5 beta builds.
+    @SerializedName(value = "segments", alternate = ["mutableSegmentsOrNull"])
+    private var mutableSegmentsOrNull: MutableList<Segment>? = segments.toMutableList()
+    private val mutableSegments: MutableList<Segment>
+        get() = mutableSegmentsOrNull ?: mutableListOf<Segment>().also { mutableSegmentsOrNull = it }
+
+    val segments: MutableList<Segment> get() = Collections.unmodifiableList(mutableSegments)
 
     fun addSegment(segment: Segment) {
-        segments.add(segment)
+        mutableSegments.add(segment)
     }
 
     fun hasZeroUnitSegments() = segments.any { it.basalRateInHundredthUnitsPerHour == 0 }
@@ -24,6 +32,16 @@ class BasalProgram(
         val slot = segments.find { it.startSlotIndex <= slotIndex && slotIndex < it.endSlotIndex }
         return (slot?.basalRateInHundredthUnitsPerHour ?: 0).toDouble() / 100
     }
+
+    /**
+     * The insulin of each hour of the day from midnight, in U/h: the mean rate of its two half-hour slots. Hour values
+     * only, like the running profile in AAPS (#2454). A profile with hourly rates gives back its rates as the pod got them.
+     */
+    fun hourlyRates(): List<Double> =
+        (0 until 24).map { hour -> (rateInHundredthsAtSlot(2 * hour) + rateInHundredthsAtSlot(2 * hour + 1)) / 200.0 }
+
+    private fun rateInHundredthsAtSlot(slotIndex: Int): Int =
+        segments.find { it.startSlotIndex <= slotIndex && slotIndex < it.endSlotIndex }?.basalRateInHundredthUnitsPerHour ?: 0
 
     class Segment(
         val startSlotIndex: Short,

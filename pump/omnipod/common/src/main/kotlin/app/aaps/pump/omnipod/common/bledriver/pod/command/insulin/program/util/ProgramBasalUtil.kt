@@ -8,7 +8,8 @@ import app.aaps.pump.omnipod.common.bledriver.pod.command.insulin.program.ShortI
 import app.aaps.pump.omnipod.common.bledriver.pod.definition.BasalProgram
 import app.aaps.pump.omnipod.common.bledriver.pod.util.MessageUtil
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.Calendar
+import java.util.Date
 
 object ProgramBasalUtil {
 
@@ -37,9 +38,9 @@ object ProgramBasalUtil {
                         (previousTenthPulsesPerSlot * numberOfSlotsInCurrentElement).toShort()
                     )
                 )
+                startSlotIndex = (numberOfSlotsInCurrentElement + startSlotIndex).toByte()
                 previousTenthPulsesPerSlot = tenthPulsesPerSlot[i]
                 numberOfSlotsInCurrentElement = 1
-                startSlotIndex = (numberOfSlotsInCurrentElement + startSlotIndex).toByte()
             } else {
                 numberOfSlotsInCurrentElement++
             }

@@ -2,6 +2,13 @@
 
 package app.aaps.pump.omnipod.common.bledriver.comm.legacy.io
 
+import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
+import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.utils.toHex
+import app.aaps.pump.omnipod.common.bledriver.comm.command.BleCommandRTS
 import app.aaps.pump.omnipod.common.bledriver.comm.exceptions.ConnectException
 import app.aaps.pump.omnipod.common.bledriver.comm.interfaces.io.BleCharacteristicIO
 import app.aaps.pump.omnipod.common.bledriver.comm.interfaces.io.BleSendErrorConfirming
@@ -12,13 +19,6 @@ import app.aaps.pump.omnipod.common.bledriver.comm.interfaces.io.CharacteristicT
 import app.aaps.pump.omnipod.common.bledriver.comm.legacy.callbacks.BleCommCallbacks
 import app.aaps.pump.omnipod.common.bledriver.comm.legacy.callbacks.WriteConfirmationError
 import app.aaps.pump.omnipod.common.bledriver.comm.legacy.callbacks.WriteConfirmationSuccess
-import app.aaps.core.interfaces.logging.AAPSLogger
-import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.utils.toHex
-import app.aaps.pump.omnipod.common.bledriver.comm.command.BleCommandRTS
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
 
@@ -110,13 +110,19 @@ open class BleIO(
             throw ConnectException("Expecting one descriptor, found: ${descriptors.size}")
         }
         val descriptor = descriptors[0]
-        descriptor.value = BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+        val usesIndicate = usesIndicate(characteristic)
+        val enableValue = if (usesIndicate) BluetoothGattDescriptor.ENABLE_INDICATION_VALUE else BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+        aapsLogger.debug(
+            LTag.PUMPBTCOMM,
+            "$type characteristic properties: ${characteristic.properties} (using ${if (usesIndicate) "INDICATE" else "NOTIFY"})"
+        )
+        descriptor.value = enableValue
         gatt.writeDescriptor(descriptor)
-            .assertTrue("enable indications on descriptor")
+            .assertTrue("enable ${if (usesIndicate) "indications" else "notifications"} on descriptor")
 
-        aapsLogger.debug(LTag.PUMPBTCOMM, "Enabling indications for $type")
+        aapsLogger.debug(LTag.PUMPBTCOMM, "Enabling ${if (usesIndicate) "indications" else "notifications"} for $type")
         val confirmation = bleCommCallbacks.confirmWrite(
-            BluetoothGattDescriptor.ENABLE_INDICATION_VALUE,
+            enableValue,
             descriptor.uuid.toString(),
             DEFAULT_IO_TIMEOUT_MS
         )
@@ -131,6 +137,17 @@ open class BleIO(
 
     companion object {
         const val DEFAULT_IO_TIMEOUT_MS = BleCharacteristicIO.DEFAULT_IO_TIMEOUT_MS
+
+        /**
+         * Isolated from [readyToRead]'s GATT calls so this decision is directly unit
+         * testable, without needing the full connect()/readyToRead() mock chain - and
+         * the real Android framework's null ENABLE_INDICATION_VALUE/
+         * ENABLE_NOTIFICATION_VALUE static-field environment boundary that chain hits in
+         * pure-JVM tests (see O5ConnectionTest's documented stopping point) - just to
+         * verify which branch gets picked.
+         */
+        internal fun usesIndicate(characteristic: BluetoothGattCharacteristic): Boolean =
+            characteristic.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0
     }
 }
 
